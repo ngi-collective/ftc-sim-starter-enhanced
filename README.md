@@ -1,4 +1,4 @@
-# ftc-sim starter for VS Code
+# ftc-sim starter, enhanced
 
 The FTC SDK (FtcRobotController v12.0, BIOBUZZ 2026-2027), set up to test your OpModes against
 [ftc-sim](https://github.com/ngi-collective/ftc-sim), a simulated robot on a simulated field, and
