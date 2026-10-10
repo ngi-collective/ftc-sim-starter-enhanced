@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+#MISE description="Check that the JDK and Android SDK Gradle will use can build this project"
+#
+# Gradle uses the SDK named by sdk.dir in local.properties when that file has one, and
+# ANDROID_HOME otherwise. VS Code's Gradle import does the same, so a stale local.properties
+# breaks both. The package list matches the setup-sdk task in mise.toml.
+
+set -euo pipefail
+
+readonly JDK_MIN=17   # Android Gradle Plugin 8.13.2
+readonly JDK_MAX=21   # Gradle 9.1 cannot compile build scripts on a newer JDK
+readonly PACKAGES=("platforms/android-30" "platforms/android-34" "build-tools/35.0.0")
+
+failures=0
+pass() { printf '  ok    %s\n' "$1"; }
+fail() { printf '  FAIL  %s\n' "$1"; failures=$((failures + 1)); }
+
+jdk_major() {
+  sed -nE 's/^JAVA_VERSION="?([0-9]+).*/\1/p' "$1/release" 2>/dev/null | head -1
+}
+
+sdk_root() {
+  local dir=""
+  if [[ -r local.properties ]]; then
+    dir="$(sed -nE 's/^[[:space:]]*sdk\.dir[[:space:]]*=[[:space:]]*(.+)/\1/p' local.properties | head -1)"
+  fi
+  if [[ -n "$dir" ]]; then
+    printf '%s|local.properties sdk.dir\n' "$dir"
+  else
+    printf '%s|ANDROID_HOME\n' "${ANDROID_HOME:-}"
+  fi
+}
+
+java_home="${JAVA_HOME:-}"
+major="$([[ -n "$java_home" ]] && jdk_major "$java_home" || true)"
+if [[ -z "$java_home" ]]; then
+  fail "JDK: JAVA_HOME is not set"
+elif [[ -z "$major" ]]; then
+  fail "JDK: no version found at $java_home"
+elif ((major < JDK_MIN || major > JDK_MAX)); then
+  fail "JDK: $major is outside $JDK_MIN-$JDK_MAX ($java_home)"
+else
+  pass "JDK: $major ($java_home)"
+fi
+
+IFS='|' read -r root source < <(sdk_root)
+if [[ -z "$root" ]]; then
+  fail "SDK: ANDROID_HOME is not set"
+elif [[ ! -d "$root" ]]; then
+  fail "SDK: $root, from $source, does not exist"
+else
+  missing=()
+  for package in "${PACKAGES[@]}"; do
+    [[ -d "$root/$package" ]] || missing+=("$package")
+  done
+  if ((${#missing[@]} > 0)); then
+    fail "SDK: $root, from $source, is missing ${missing[*]}; run mise run setup-sdk"
+  else
+    pass "SDK: $root, from $source"
+  fi
+fi
+
+if ((failures > 0)); then
+  printf '%d check(s) failed\n' "$failures"
+  exit 1
+fi

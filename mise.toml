@@ -1,0 +1,63 @@
+[tools]
+# Gradle 9.1 (see gradle/wrapper) and Android Gradle Plugin 8.13.2 need JDK 17 or later; 21 is the
+# newest LTS both support.
+java = "temurin-21"
+
+# Pinned, not "latest": the plugin ships cmdline-tools only, and the platforms and build-tools that
+# `mise run setup-sdk` installs live in the versioned install directory. Bumping this version
+# leaves an empty SDK until setup-sdk runs again.
+android-sdk = "22.0"
+
+# Tasks run inside the mise environment, so JAVA_HOME and ANDROID_HOME are already set. Extra flags
+# pass through: `mise run test --info`. mise runs `run` with sh on macOS and Linux and `run_windows`
+# with cmd on Windows, so each task has both.
+#
+# TeamCode has two product flavours: `robot`, the APK that goes to a Control Hub, and `simulated`,
+# which the ftc-sim plugin adds. The tasks name the flavour, because "debug" alone is ambiguous.
+
+# android-30 is the SDK's own compile SDK (build.common.gradle); the ftc-sim plugin compiles
+# TeamCode against android-34. Keep this list in step with mise-tasks/verify-toolchain.
+[tasks.setup-sdk]
+description = "Install the Android SDK packages the build needs into mise's ANDROID_HOME"
+run = """
+yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses > /dev/null
+sdkmanager --sdk_root="$ANDROID_HOME" "platforms;android-30" "platforms;android-34" "build-tools;35.0.0" "platform-tools"
+"""
+# cmd has no `yes`, so the Windows twin answers the licence prompts from PowerShell.
+run_windows = """powershell -NoProfile -Command "1..50 | ForEach-Object { 'y' } | sdkmanager --sdk_root=$env:ANDROID_HOME --licenses | Out-Null; sdkmanager --sdk_root=$env:ANDROID_HOME 'platforms;android-30' 'platforms;android-34' 'build-tools;35.0.0' 'platform-tools'; exit $LASTEXITCODE""""
+
+[tasks.check]
+description = "Compile TeamCode, the fastest check while editing OpModes"
+run = "./gradlew :TeamCode:compileRobotDebugJavaWithJavac"
+run_windows = "gradlew.bat :TeamCode:compileRobotDebugJavaWithJavac"
+
+[tasks.test]
+description = "Run TeamCode's tests against the simulator"
+run = "./gradlew :TeamCode:testSimulatedDebugUnitTest"
+run_windows = "gradlew.bat :TeamCode:testSimulatedDebugUnitTest"
+
+[tasks.build]
+description = "Build the competition debug APK"
+run = "./gradlew :TeamCode:assembleRobotDebug"
+run_windows = "gradlew.bat :TeamCode:assembleRobotDebug"
+
+[tasks.install]
+description = "Build and install the competition APK on a connected Control Hub"
+run = "./gradlew :TeamCode:installRobotDebug"
+run_windows = "gradlew.bat :TeamCode:installRobotDebug"
+
+# Flags go through --args, e.g. mise run dashboard --args="--port 9000".
+[tasks.dashboard]
+description = "Serve a Driver Hub in the browser against TeamCode's OpModes (http://localhost:8765)"
+run = "./gradlew :TeamCode:dashboard"
+run_windows = "gradlew.bat :TeamCode:dashboard"
+
+[tasks.lint]
+description = "Run Android lint on TeamCode"
+run = "./gradlew :TeamCode:lintRobotDebug"
+run_windows = "gradlew.bat :TeamCode:lintRobotDebug"
+
+[tasks.clean]
+description = "Delete build outputs"
+run = "./gradlew clean"
+run_windows = "gradlew.bat clean"

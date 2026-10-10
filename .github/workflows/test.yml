@@ -1,8 +1,7 @@
 name: Test
 
 # Runs TeamCode's tests against the simulator, and builds the competition APK, on every push and
-# pull request. GitHub's Ubuntu runners already have the Android SDK (ANDROID_HOME, android-34,
-# build-tools 34.0.0), so the only setup is a JDK.
+# pull request, with the same mise toolchain and tasks a laptop uses.
 
 on:
   push:
@@ -22,24 +21,63 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Gradle 9.1 and Android Gradle Plugin 8.13.2 need JDK 17 or later; 21 is the LTS both support.
-      - uses: actions/setup-java@v6
+      # `mise run setup-sdk` installs the SDK packages (about 500 MB) inside mise's android-sdk
+      # directory. Restoring them before mise-action runs lets setup-sdk find them in place.
+      - name: Cache Android SDK packages
+        uses: actions/cache@v6
         with:
-          distribution: temurin
-          java-version: '21'
+          path: ~/.local/share/mise/installs/android-sdk
+          key: android-sdk-${{ runner.os }}-${{ hashFiles('mise.toml') }}
+
+      - name: Install the toolchain
+        uses: jdx/mise-action@v5.1.1
+
+      - name: Install Android SDK packages
+        run: mise run setup-sdk
 
       - uses: gradle/actions/setup-gradle@v6
 
+      - name: Check the toolchain
+        run: mise run verify-toolchain
+
       - name: Test against the simulator
-        run: ./gradlew :TeamCode:testSimulatedDebugUnitTest
+        run: mise run test
 
       - name: Build the competition APK
-        run: ./gradlew :TeamCode:assembleRobotDebug
+        run: mise run build
 
       - name: Upload test reports
         if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: test-reports
+          path: TeamCode/build/reports/tests/
+          if-no-files-found: ignore
+
+  # The same tasks on Windows, where mise runs each task's `run_windows` under cmd.
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install the toolchain
+        uses: jdx/mise-action@v5.1.1
+
+      - name: Install Android SDK packages
+        run: mise run setup-sdk
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Test against the simulator
+        run: mise run test
+
+      - name: Build the competition APK
+        run: mise run build
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports-windows
           path: TeamCode/build/reports/tests/
           if-no-files-found: ignore
