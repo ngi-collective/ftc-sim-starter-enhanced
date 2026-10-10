@@ -3,13 +3,19 @@
 #
 # Gradle uses the SDK named by sdk.dir in local.properties when that file has one, and
 # ANDROID_HOME otherwise. VS Code's Gradle import does the same, so a stale local.properties
-# breaks both. The package list matches the setup-sdk task in mise.toml.
+# breaks both. The packages are tools/sdk-packages.txt, which setup-sdk installs.
 
 set -euo pipefail
 
 readonly JDK_MIN=17   # Android Gradle Plugin 8.13.2
 readonly JDK_MAX=21   # Gradle 9.1 cannot compile build scripts on a newer JDK
-readonly PACKAGES=("platforms/android-30" "platforms/android-34" "build-tools/35.0.0")
+# "platforms;android-34" installs to platforms/android-34. A read loop, because macOS's bash 3.2
+# has no mapfile.
+PACKAGES=()
+while IFS= read -r package; do
+  [[ -n "$package" ]] && PACKAGES+=("${package//;//}")
+done < tools/sdk-packages.txt
+readonly PACKAGES
 
 failures=0
 pass() { printf '  ok    %s\n' "$1"; }
