@@ -3,8 +3,7 @@
 The FTC SDK (FtcRobotController v12.0, BIOBUZZ 2026-2027), set up to test your OpModes against
 [ftc-sim](https://github.com/ngi-collective/ftc-sim), a simulated robot on a simulated field, and
 to work in VS Code with [mise](https://mise.jdx.dev) supplying the JDK and the Android SDK. No
-Android Studio needed. For Android Studio, use
-[ftc-sim-starter](https://github.com/ngi-collective/ftc-sim-starter) instead.
+Android Studio needed, though it still works: see [Android Studio](#android-studio).
 
 - **Tests** drive your OpModes with no robot attached and check where the robot ends up.
 - **A Driver Hub in your browser**: a 3D field, gamepad input, the robot's camera view and the
@@ -49,6 +48,15 @@ Not affiliated with or endorsed by FIRST. FIRST Tech Challenge and FTC are trade
 Already have a team fork of FtcRobotController? You don't need this repository. Add the plugin to
 your own `TeamCode/build.gradle` as described in the
 [ftc-sim README](https://github.com/ngi-collective/ftc-sim#use-it-in-your-teams-code).
+
+### Android Studio
+
+Opening the folder in Android Studio (Narwhal 3 Feature Drop or later) works as it does for any
+FTC SDK project, with Studio's bundled JDK and its own SDK; Studio ignores `mise.toml` and
+`.vscode/`. One thing to know if you use both: Studio writes your SDK's path to `local.properties`
+as `sdk.dir`, and Gradle then uses that SDK in place of mise's, in VS Code and the terminal too.
+That works as long as Studio's SDK has the packages; `mise run verify-toolchain` says which SDK is
+in use and whether it does. Delete the `sdk.dir` line to go back to mise's.
 
 ## Run the tests
 
