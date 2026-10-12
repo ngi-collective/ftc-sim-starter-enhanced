@@ -8,7 +8,7 @@
 set -euo pipefail
 
 readonly JDK_MIN=17   # Android Gradle Plugin 8.13.2
-readonly JDK_MAX=21   # Gradle 9.1 cannot compile build scripts on a newer JDK
+readonly JDK_MAX=25   # the newest JDK the build is tested on
 # "platforms;android-34" installs to platforms/android-34. A read loop, because macOS's bash 3.2
 # has no mapfile.
 PACKAGES=()

@@ -1,7 +1,7 @@
 // ftc-sim: the simulated flavour, headless OpMode tests and the browser Driver Hub.
 // https://github.com/ngi-collective/ftc-sim
 plugins {
-    id 'org.ngi-collective.ftc-sim' version '12.0.2'
+    id 'org.ngi-collective.ftc-sim' version '12.0.3'
 }
 
 apply plugin: 'com.android.application'
@@ -35,7 +35,7 @@ dependencies {
 }
 
 ftcSim {
-    version = '12.0.2'        // the simulator; its major version is the FTC SDK's
+    version = '12.0.3'        // the simulator; its major version is the FTC SDK's
     season = 'biobuzz'        // the game this robot practises
     seasonVersion = '1.0.0'   // that game's own release
 }
