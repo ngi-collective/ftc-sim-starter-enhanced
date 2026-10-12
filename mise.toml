@@ -1,6 +1,6 @@
 [tools]
-# Gradle 9.1 (see gradle/wrapper) and Android Gradle Plugin 8.13.2 need JDK 17 or later; 21 is the
-# newest LTS both support.
+# Gradle 9.1 (see gradle/wrapper) and Android Gradle Plugin 8.13.2 need JDK 17 or later. The tests
+# pass on 21 and 25.
 java = "temurin-21"
 
 # Pinned, not "latest": the plugin ships cmdline-tools only, and the platforms and build-tools that
